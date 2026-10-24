@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PRL Royale · Misión Supervivencia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#14062f;--bg2:#3a1a8f;--cyan:#2de2ff;--yellow:#ffe14a;--pink:#ff4fd8;--green:#5dff7a;--red:#ff4a5e;--card:#231058;--card2:#2f1a78;--ink:#fff}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Nunito',system-ui,sans-serif;color:var(--ink);background:radial-gradient(1200px 700px at 70% -10%,#6a35e8 0%,transparent 60%),radial-gradient(900px 600px at 0% 100%,#00a8d8 0%,transparent 55%),linear-gradient(160deg,var(--bg1),var(--bg2));background-attachment:fixed;overflow-x:hidden;min-height:100vh}
+body::before{content:"";position:fixed;inset:0;background-image:radial-gradient(#fff3 1.5px,transparent 1.6px);background-size:46px 46px;opacity:.25;pointer-events:none;animation:drift 40s linear infinite}
+@keyframes drift{to{background-position:460px 460px}}
+h1,h2,h3,.fx{font-family:'Lilita One','Impact',sans-serif;letter-spacing:.5px}
+.screen{display:none;min-height:100vh;padding:18px;max-width:1180px;margin:0 auto;position:relative;z-index:1}
+.screen.active{display:block}
+.btn{font-family:'Lilita One','Impact',sans-serif;font-size:1.5rem;color:#2a1600;background:var(--yellow);border:0;padding:14px 34px;border-radius:12px;cursor:pointer;transform:skewX(-8deg);box-shadow:0 7px 0 #b88f00,0 14px 22px #0006;transition:.12s;text-transform:uppercase}
+.btn span{display:inline-block;transform:skewX(8deg)}
+.btn:hover{filter:brightness(1.08);transform:skewX(-8deg) translateY(-2px)}
+.btn:active{transform:skewX(-8deg) translateY(5px);box-shadow:0 2px 0 #b88f00}
+.btn:disabled{filter:grayscale(1) brightness(.7);cursor:not-allowed}
+.btn.alt{background:var(--cyan);box-shadow:0 7px 0 #0a8fa8,0 14px 22px #0006}
+.btn.small{font-size:1.1rem;padding:9px 20px}
+/* LOBBY */
+#lobby{text-align:center;padding-top:30px}
+.logo{font-size:clamp(2.6rem,8vw,5.6rem);line-height:.95;transform:skewX(-7deg);text-transform:uppercase;color:#fff;text-shadow:0 4px 0 var(--pink),0 8px 0 #6a1b9a,0 16px 30px #000a}
+.logo small{display:block;font-size:.38em;color:var(--yellow);text-shadow:0 3px 0 #7a5d00;margin-top:8px}
+.lobby-grid{display:flex;gap:26px;justify-content:center;align-items:center;flex-wrap:wrap;margin-top:18px}
+.lobby-card{background:#ffffff14;border:2px solid #ffffff30;backdrop-filter:blur(6px);border-radius:22px;padding:20px 24px;max-width:430px;text-align:left}
+.lobby-card h3{color:var(--cyan);font-size:1.5rem;margin-bottom:8px}
+.lobby-card li{margin:7px 0 7px 22px;font-weight:700;line-height:1.35}
+.stat-row{display:flex;gap:10px;justify-content:center;margin:18px 0;flex-wrap:wrap}
+.pill{background:#0006;border:2px solid #ffffff30;padding:6px 14px;border-radius:99px;font-weight:900}
+.hero-big{width:230px;filter:drop-shadow(0 20px 20px #0008)}
+.hero{overflow:visible}
+/* HUD */
+.hud{display:grid;grid-template-columns:1.2fr 1fr auto auto;gap:14px;align-items:center;background:#0008;border:2px solid #ffffff2a;border-radius:18px;padding:10px 16px;backdrop-filter:blur(6px)}
+.hearts{font-size:1.5rem;letter-spacing:2px;min-height:34px}
+.hearts i{font-style:normal;display:inline-block;transition:.3s}
+.hearts i.lost{filter:grayscale(1) brightness(.4);transform:scale(.75)}
+.hpbar{position:relative;height:22px;border-radius:8px;background:#0009;border:2px solid #fff4;overflow:hidden;margin-top:4px;transform:skewX(-10deg)}
+.hpbar i{position:absolute;inset:0 auto 0 0;background:linear-gradient(#8dff9f,#2fd05a);transition:width .6s,background .6s}
+.hpbar.mid i{background:linear-gradient(#ffe77a,#ffb400)}
+.hpbar.low i{background:linear-gradient(#ff8d8d,#ff2e44);animation:blink .6s infinite alternate}
+@keyframes blink{to{filter:brightness(1.5)}}
+.hpbar span{position:absolute;inset:0;text-align:center;font-weight:900;font-size:.85rem;line-height:19px;text-shadow:0 1px 2px #000}
+.storm .lbl{font-weight:900;font-size:.95rem}
+.stormbar{height:14px;border-radius:99px;background:#0009;border:2px solid #fff3;overflow:hidden;margin-top:5px}
+.stormbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#a46bff,#ff4fd8);transition:width .5s}
+.score{font-family:'Lilita One',sans-serif;font-size:1.6rem;color:var(--yellow);text-align:right;line-height:1}
+.score small{display:block;font-family:Nunito;font-size:.8rem;color:var(--green);min-height:1em}
+.mute{background:#0006;border:2px solid #fff3;color:#fff;border-radius:12px;width:42px;height:42px;font-size:1.2rem;cursor:pointer}
+/* ARENA */
+.arena{display:grid;grid-template-columns:260px 1fr;gap:18px;margin-top:16px;align-items:start}
+.hero-wrap{position:relative;background:linear-gradient(#ffffff18,#ffffff06);border:2px solid #ffffff25;border-radius:22px;padding:14px 8px 6px;text-align:center;overflow:hidden}
+.hero-wrap::after{content:"";position:absolute;left:12%;right:12%;bottom:34px;height:16px;background:radial-gradient(#0008,transparent 70%)}
+#hero{width:200px;position:relative;z-index:1;animation:idle 2.4s ease-in-out infinite}
+@keyframes idle{50%{transform:translateY(-6px)}}
+.say{position:relative;background:#fff;color:#2a1b55;font-weight:800;border-radius:14px;padding:8px 12px;font-size:.95rem;margin:4px 6px 8px;min-height:44px;display:flex;align-items:center;justify-content:center;line-height:1.25}
+.say::before{content:"";position:absolute;top:-8px;left:50%;border:8px solid transparent;border-bottom-color:#fff;border-top:0;margin-left:-8px}
+.hit #hero{animation:hit .5s}
+@keyframes hit{0%{transform:translateX(0)}20%{transform:translateX(-16px) rotate(-6deg)}40%{transform:translateX(14px) rotate(5deg)}60%{transform:translateX(-10px)}100%{transform:translateX(0)}}
+.hero.l5{}
+.hero.l1{animation:wobble 1.1s ease-in-out infinite!important;transform-origin:50% 90%}
+@keyframes wobble{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
+.d1,.d2,.d3,.d4{display:none}
+.hero.l4 .d4,.hero.l3 .d4,.hero.l3 .d3,.hero.l2 .d4,.hero.l2 .d3,.hero.l2 .d2,.hero.l1 .d4,.hero.l1 .d3,.hero.l1 .d2,.hero.l1 .d1{display:inline}
+.hero.l3 .mouth-ok,.hero.l2 .mouth-ok,.hero.l1 .mouth-ok,.hero.l1 .eyes-ok{display:none}
+.hero.l1 #hat{transform:translate(48px,52px) rotate(32deg);transform-box:fill-box}
+.hero.l2 #hat{transform:rotate(-8deg);transform-origin:110px 80px}
+.stars-spin{transform-origin:110px 48px;animation:spin 1.6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.smoke{animation:smoke 2s ease-out infinite}
+.smoke:nth-child(2){animation-delay:.7s}.smoke:nth-child(3){animation-delay:1.3s}
+@keyframes smoke{0%{transform:translateY(0);opacity:.7}100%{transform:translateY(-34px);opacity:0}}
+.float{position:absolute;left:50%;top:40%;font-family:'Lilita One',sans-serif;font-size:2.4rem;pointer-events:none;z-index:5;animation:floatup 1.2s forwards;text-shadow:0 3px 0 #0008}
+@keyframes floatup{0%{opacity:0;transform:translate(-50%,10px) scale(.6)}15%{opacity:1;transform:translate(-50%,-10px) scale(1.2)}100%{opacity:0;transform:translate(-50%,-90px)}}
+.flash{position:fixed;inset:0;pointer-events:none;z-index:50;background:radial-gradient(circle,transparent 40%,#ff1030cc);opacity:0}
+.flash.on{animation:flash .6s}
+@keyframes flash{0%{opacity:1}100%{opacity:0}}
+body.danger::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:40;box-shadow:inset 0 0 160px 40px #ff0030aa;animation:pulse 1.4s infinite alternate}
+@keyframes pulse{to{opacity:.35}}
+.shake{animation:shake .45s}
+@keyframes shake{20%{transform:translate(-8px,4px)}40%{transform:translate(8px,-4px)}60%{transform:translate(-5px,3px)}80%{transform:translate(4px,-2px)}}
+/* QUESTION */
+.qcard{background:linear-gradient(160deg,var(--card2),var(--card));border:3px solid #ffffff30;border-radius:24px;padding:20px 22px 22px;box-shadow:0 20px 50px #0007;position:relative}
+.qtype{display:inline-block;font-family:'Lilita One';background:var(--pink);color:#fff;padding:3px 14px;border-radius:8px;transform:skewX(-10deg);font-size:.95rem;letter-spacing:1px}
+.timer{height:10px;border-radius:99px;background:#0007;margin:12px 0;overflow:hidden}
+.timer i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--cyan),var(--green));transition:width .1s linear}
+.timer.warn i{background:linear-gradient(90deg,#ff9d00,var(--red))}
+#qtext{font-size:clamp(1.3rem,2.6vw,1.9rem);line-height:1.2;margin:6px 0 16px;font-weight:400}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.opt{display:flex;gap:12px;align-items:center;text-align:left;font:800 1.05rem/1.25 Nunito,sans-serif;color:#fff;background:#ffffff14;border:2px solid #ffffff3a;border-radius:14px;padding:13px 14px;cursor:pointer;transition:.12s}
+.opt b{flex:none;width:34px;height:34px;border-radius:9px;background:var(--cyan);color:#052;display:grid;place-items:center;font-family:'Lilita One';font-size:1.1rem}
+.opt:hover:not(:disabled){background:#ffffff2a;transform:translateY(-2px);border-color:var(--cyan)}
+.opt:disabled{cursor:default}
+.opt.right{background:#1fbf5a;border-color:#8dffb0;animation:pop .4s}
+.opt.wrong{background:#c92a43;border-color:#ff9aa8;animation:shake .4s}
+.opt.dim{opacity:.45}
+@keyframes pop{50%{transform:scale(1.04)}}
+.tf{grid-template-columns:1fr 1fr}
+.tf .opt{justify-content:center;font-family:'Lilita One';font-size:1.7rem;padding:22px}
+.tf .opt.v b{background:var(--green)}.tf .opt.f b{background:var(--red);color:#fff}
+.slots{display:grid;gap:8px;margin-bottom:12px}
+.slot{display:flex;align-items:center;gap:10px;min-height:46px;border:2px dashed #ffffff55;border-radius:12px;padding:6px 10px;font-weight:800;background:#0003;cursor:pointer}
+.slot b{flex:none;width:30px;height:30px;border-radius:50%;background:#ffffff22;display:grid;place-items:center;font-family:'Lilita One'}
+.slot.filled{border-style:solid;border-color:var(--cyan);background:#2de2ff22}
+.slot.filled b{background:var(--cyan);color:#052}
+.slot.ok{border-color:#8dffb0;background:#1fbf5a55}.slot.ko{border-color:#ff9aa8;background:#c92a4355}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.chip{background:#fff;color:#2a1b55;font-weight:900;border:0;border-radius:10px;padding:10px 14px;cursor:pointer;font-family:Nunito;font-size:1rem;box-shadow:0 4px 0 #b9aee6}
+.chip:disabled{opacity:.25;cursor:default}
+.fb{margin-top:16px;border-radius:16px;padding:14px 16px;border:3px solid;animation:rise .3s}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}}
+.fb.good{background:#0d4a2a;border-color:#52e88a}.fb.bad{background:#521028;border-color:#ff6b86}
+.fb h4{font-family:'Lilita One';font-size:1.35rem;font-weight:400;margin-bottom:4px}
+.fb .pts{color:var(--yellow);font-weight:900}
+.fb p{line-height:1.4;font-weight:700;margin:5px 0}
+.fb .exp{background:#0004;border-radius:10px;padding:9px 12px;font-weight:700}
+.fb .row{display:flex;justify-content:flex-end;margin-top:12px}
+.hidden{display:none!important}
+/* DEATH / WIN */
+.endwrap{text-align:center;padding-top:20px}
+.elim{font-size:clamp(2.6rem,9vw,6rem);color:var(--red);text-transform:uppercase;text-shadow:0 5px 0 #6b0014,0 12px 30px #000;transform:skewX(-7deg);animation:slam .5s}
+@keyframes slam{from{transform:skewX(-7deg) scale(3);opacity:0}}
+.tomb{position:relative;width:min(300px,80vw);margin:10px auto}
+.tomb .killer{position:absolute;top:104px;left:0;right:0;font-size:4.2rem;animation:float 2.4s ease-in-out infinite;filter:drop-shadow(0 6px 4px #0008)}
+.ghost{position:absolute;right:-8px;top:0;font-size:3rem;animation:ghost 3s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(-10px)}}
+@keyframes ghost{0%{transform:translateY(30px);opacity:0}50%{opacity:1}100%{transform:translateY(-40px);opacity:0}}
+.cause{max-width:700px;margin:8px auto;font-size:1.25rem;font-weight:900;line-height:1.3}
+.quip{max-width:700px;margin:8px auto;background:#ffffff18;border:2px solid #ffffff30;border-radius:16px;padding:12px 16px;font-weight:800;font-size:1.1rem}
+.stars{font-size:clamp(2.6rem,10vw,4.6rem);letter-spacing:6px;margin:6px 0}
+.stars span{display:inline-block;opacity:0;animation:star .5s forwards}
+@keyframes star{from{transform:scale(3) rotate(-40deg);opacity:0}to{transform:scale(1);opacity:1}}
+.stars .off{filter:grayscale(1) brightness(.5)}
+.res{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+.res div{background:#0006;border:2px solid #fff3;border-radius:14px;padding:10px 18px;min-width:130px}
+.res b{display:block;font-family:'Lilita One';font-size:1.7rem;color:var(--yellow);font-weight:400}
+.res small{font-weight:800;color:#d7cfff}
+.how{max-width:640px;margin:10px auto;font-size:.95rem;font-weight:700;color:#d7cfff}
+.btns{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+.confetti{position:fixed;top:-20px;width:10px;height:16px;z-index:60;animation:fall linear forwards;pointer-events:none}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+.foot{margin-top:22px;text-align:center;font-size:.85rem;color:#cbbff5;font-weight:700}
+@media(max-width:820px){
+ .hud{grid-template-columns:1fr 1fr}
+ .arena{grid-template-columns:1fr}
+ .hero-wrap{display:flex;align-items:center;gap:6px;padding:8px}
+ #hero{width:110px;flex:none}
+ .say{flex:1;margin:0}.say::before{display:none}
+ .opts{grid-template-columns:1fr}
+ .hero-wrap::after{display:none}
+}
+</style>
+</head>
+<body>
+<div class="flash" id="flash"></div>
+
+<!-- LOBBY -->
+<section id="lobby" class="screen active">
+  <h1 class="logo">PRL Royale<small>Misión supervivencia</small></h1>
+  <div class="lobby-grid">
+    <svg class="hero-big hero l5" id="heroLobby" viewBox="0 0 220 300"></svg>
+    <div class="lobby-card">
+      <h3>🎯 Cómo se juega</h3>
+      <ul>
+        <li>Sobrevive a <b>25 preguntas</b> sobre riesgos químicos, biológicos y psicosociales.</li>
+        <li>Tienes <b>5 vidas</b>. Cada fallo daña a tu personaje… y se nota.</li>
+        <li>Tres tipos de reto: <b>opción múltiple</b>, <b>verdadero o falso</b> y <b>ordenar secuencias</b>.</li>
+        <li>Cuanto más rápido aciertes, <b>más puntos</b>. Las rachas dan bonus.</li>
+        <li>Si llegas al final, <b>cada vida que te quede suma puntos</b> y estrellas.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="stat-row">
+    <div class="pill">🏆 Récord: <span id="best">0</span></div>
+    <div class="pill">🎮 Partidas: <span id="played">0</span></div>
+    <div class="pill">📚 Banco: 75 preguntas</div>
+  </div>
+  <button class="btn" id="startBtn"><span>¡Saltar a la isla!</span></button>
+  <p class="foot">Material de apoyo · PRL · IPE I · Factores químicos, biológicos y riesgos psicosociales</p>
+</section>
+
+<!-- GAME -->
+<section id="game" class="screen">
+  <div class="hud">
+    <div><div class="hearts" id="hearts"></div><div class="hpbar" id="hpbar"><i id="hpfill"></i><span id="hptxt">100 HP</span></div></div>
+    <div class="storm"><div class="lbl">🌪️ Pregunta <b id="qn">1</b> / 25 · la tormenta se cierra</div><div class="stormbar"><i id="stormfill"></i></div></div>
+    <div class="score">⭐ <span id="score">0</span><small id="streak"></small></div>
+    <button class="mute" id="mute" title="Sonido">🔊</button>
+  </div>
+  <div class="arena" id="arena">
+    <div class="hero-wrap" id="heroWrap">
+      <svg class="hero l5" id="hero" viewBox="0 0 220 300"></svg>
+      <div class="say" id="say">¡Listo para sobrevivir!</div>
+    </div>
+    <div class="qcard">
+      <span class="qtype" id="qtype"></span>
+      <div class="timer" id="timer"><i id="tfill"></i></div>
+      <h2 id="qtext"></h2>
+      <div id="qbody"></div>
+      <div class="fb hidden" id="fb"></div>
+    </div>
+  </div>
+</section>
+
+<!-- DEATH -->
+<section id="death" class="screen">
+  <div class="endwrap">
+    <h1 class="elim">¡Eliminado!</h1>
+    <div class="tomb">
+      <svg viewBox="0 0 300 260" width="100%"><path d="M40 250V110a110 110 0 0 1 220 0v140z" fill="#8d93a8" stroke="#3a3f57" stroke-width="8"/><path d="M62 250V112a88 88 0 0 1 176 0v138z" fill="#a9afc4"/><text x="150" y="86" text-anchor="middle" font-family="Lilita One,Impact" font-size="34" fill="#3a3f57">R.I.P.</text><ellipse cx="150" cy="252" rx="130" ry="9" fill="#2a8a3e"/></svg>
+      <div class="killer" id="killer"></div><div class="ghost">👻</div>
+    </div>
+    <p class="cause" id="cause"></p>
+    <p class="quip" id="goQuip"></p>
+    <div class="res" id="deathRes"></div>
+    <div class="btns"><button class="btn" id="retry1"><span>¡Revancha!</span></button><button class="btn alt small" id="home1"><span>Inicio</span></button></div>
+  </div>
+</section>
+
+<!-- WIN -->
+<section id="win" class="screen">
+  <div class="endwrap">
+    <h1 class="logo" style="font-size:clamp(2.2rem,7vw,4.4rem)">¡Superviviente!</h1>
+    <div class="stars" id="stars"></div>
+    <p class="cause" id="winTier"></p>
+    <p class="quip" id="winQuip"></p>
+    <div class="res" id="winRes"></div>
+    <p class="how" id="how"></p>
+    <div class="btns"><button class="btn" id="retry2"><span>Jugar otra vez</span></button><button class="btn alt small" id="home2"><span>Inicio</span></button></div>
+  </div>
+</section>
+
+<script>
+/* ================= UTILIDADES ================= */
+const $=s=>document.querySelector(s);
+const shuffle=a=>{const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b};
+const store={get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+/* "Bolsa" de frases: no repite ninguna hasta agotarlas todas (se recuerda entre partidas) */
+function bag(name,arr){let st=store.get('prlr_bag_'+name,null);
+  if(!st||st.n!==arr.length||!st.left||!st.left.length){const last=st&&st.last;let left=shuffle(arr.map((_,i)=>i));if(left[left.length-1]===last&&left.length>1){left.unshift(left.pop())}st={n:arr.length,left,last:null}}
+  const i=st.left.pop();st.last=i;store.set('prlr_bag_'+name,st);return arr[i]}
+
+/* ================= SONIDO ================= */
+let audio=null,muted=store.get('prlr_mute',false);
+function tone(f,d,type='square',v=.08,t0=0){if(muted)return;try{audio=audio||new (window.AudioContext||window.webkitAudioContext)();const o=audio.createOscillator(),g=audio.createGain();o.type=type;o.frequency.value=f;g.gain.value=v;o.connect(g);g.connect(audio.destination);const t=audio.currentTime+t0;o.start(t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.stop(t+d)}catch(e){}}
+const sfx={ok(){tone(660,.12,'triangle');tone(990,.2,'triangle',.08,.1)},bad(){tone(220,.25,'sawtooth',.09);tone(150,.4,'sawtooth',.09,.15)},tick(){tone(900,.05,'square',.04)},win(){[523,659,784,1047,1319].forEach((f,i)=>tone(f,.25,'triangle',.09,i*.12))},over(){[392,330,262,196].forEach((f,i)=>tone(f,.4,'sawtooth',.08,i*.25))},click(){tone(500,.05,'square',.05)}};
+
+/* ================= PERSONAJE (SVG) ================= */
+const HERO=`
+<ellipse cx="110" cy="286" rx="62" ry="9" fill="#000" opacity=".3"/>
+<path class="d1" d="M168 188l26 92" stroke="#7a4a1e" stroke-width="9" stroke-linecap="round"/>
+<rect x="82" y="188" width="24" height="80" rx="10" fill="#2b3a67"/><rect x="114" y="188" width="24" height="80" rx="10" fill="#2b3a67"/>
+<rect x="76" y="262" width="36" height="20" rx="8" fill="#3b2a1a"/><rect x="110" y="262" width="36" height="20" rx="8" fill="#3b2a1a"/>
+<rect x="44" y="124" width="28" height="68" rx="14" fill="#ff8a1f"/><rect x="148" y="124" width="28" height="68" rx="14" fill="#ff8a1f"/>
+<circle cx="58" cy="196" r="13" fill="#f1b98a"/><circle cx="162" cy="196" r="13" fill="#f1b98a"/>
+<rect x="70" y="118" width="80" height="86" rx="22" fill="#ff8a1f"/>
+<rect x="70" y="150" width="80" height="10" fill="#eaf8ff"/><rect x="70" y="174" width="80" height="10" fill="#eaf8ff"/>
+<path d="M110 118v86" stroke="#c86400" stroke-width="3"/>
+<g class="d4"><ellipse cx="90" cy="195" rx="12" ry="6" fill="#4a3320" opacity=".35"/><path d="M128 130l10 8" stroke="#4a3320" stroke-width="3" opacity=".4"/></g>
+<g class="d2"><path d="M70 160l12 8-10 8 14 8-8 10h-8z" fill="#3b2a6b"/><path d="M150 140l-14 8 10 8-12 8 10 10" fill="none" stroke="#8a4200" stroke-width="3"/></g>
+<g class="d2"><path d="M40 150l40 36-8 14-40-36z" fill="#fff" stroke="#c9c9d6" stroke-width="3"/><path d="M52 158l20 18" stroke="#ff4a5e" stroke-width="3" opacity=".7"/></g>
+<rect x="68" y="108" width="84" height="14" rx="7" fill="#c86400"/>
+<circle cx="68" cy="90" r="9" fill="#e8a574"/><circle cx="152" cy="90" r="9" fill="#e8a574"/>
+<circle cx="110" cy="88" r="42" fill="#f1b98a"/>
+<g class="eyes-ok"><circle cx="94" cy="96" r="6" fill="#222"/><circle cx="126" cy="96" r="6" fill="#222"/><circle cx="96" cy="94" r="2" fill="#fff"/><circle cx="128" cy="94" r="2" fill="#fff"/></g>
+<g class="d1" fill="none" stroke="#222" stroke-width="3"><path d="M94 96m-3 0a3 3 0 1 1 6 0a6 6 0 1 1-12 0a9 9 0 1 1 18 0"/><path d="M126 96m-3 0a3 3 0 1 1 6 0a6 6 0 1 1-12 0a9 9 0 1 1 18 0"/></g>
+<path class="mouth-ok" d="M95 112q15 14 30 0" fill="none" stroke="#7a3b1a" stroke-width="4" stroke-linecap="round"/>
+<path class="d3" d="M96 118q14-12 28 0" fill="none" stroke="#7a3b1a" stroke-width="4" stroke-linecap="round"/>
+<g class="d4"><ellipse cx="84" cy="106" rx="8" ry="4" fill="#4a3320" opacity=".35"/><ellipse cx="140" cy="108" rx="7" ry="4" fill="#4a3320" opacity=".3"/></g>
+<g class="d3"><g transform="rotate(-25 128 108)"><rect x="114" y="102" width="30" height="12" rx="3" fill="#fff" stroke="#d6b88f" stroke-width="2"/><path d="M129 102v12M120 108h18" stroke="#e8c9a0" stroke-width="1.5"/></g><path d="M84 112q-6 8-2 14q6-4 2-14z" fill="#7fd8ff"/></g>
+<g id="hat"><path d="M66 80a44 42 0 0 1 88 0z" fill="#ffd400"/><rect x="58" y="76" width="104" height="12" rx="6" fill="#f2b900"/><rect x="101" y="40" width="18" height="38" rx="6" fill="#ffe14a"/><path class="d3" d="M96 44l8 14-6 10 10 8" fill="none" stroke="#7a5d00" stroke-width="3" stroke-linejoin="round"/></g>
+<g class="d2 stars-spin"><polygon points="70,40 73,47 81,47 75,52 77,60 70,55 63,60 65,52 59,47 67,47" fill="#ffe14a"/><polygon points="150,36 152,42 159,42 154,46 156,53 150,49 144,53 146,46 141,42 148,42" fill="#2de2ff"/><polygon points="110,18 113,25 121,25 115,30 117,38 110,33 103,38 105,30 99,25 107,25" fill="#ff4fd8"/></g>
+<g class="d2"><circle class="smoke" cx="104" cy="50" r="7" fill="#999" opacity=".6"/><circle class="smoke" cx="118" cy="48" r="6" fill="#aaa" opacity=".6"/><circle class="smoke" cx="110" cy="54" r="8" fill="#888" opacity=".6"/></g>`;
+const setHeroLives=(svg,l)=>{svg.setAttribute('class',svg.getAttribute('class').replace(/\bl\d\b/,'l'+l))};
+document.querySelectorAll('svg.hero').forEach(s=>s.innerHTML=HERO);
+
+/* ================= BANCO DE PREGUNTAS (75) ================= */
+const Q=[];
+const mc=(k,q,right,wrongs,e)=>Q.push({t:'mc',k,q,right,wrongs,e});
+const tf=(k,q,a,e)=>Q.push({t:'tf',k,q,a,e});
+const or=(k,q,items,e)=>Q.push({t:'or',k,q,items,e});
+/* --- Opción múltiple (35) --- */
+mc('quim','¿Cuál es la vía de entrada más frecuente de los contaminantes químicos en el trabajo?','Vía respiratoria (inhalatoria)',['Vía digestiva','Vía parenteral','Vía auditiva'],'Lo que respiramos llega a los pulmones y de ahí a la sangre en segundos. Por eso la ventilación y la protección respiratoria son tan importantes.');
+mc('vac','Un pinchazo con una aguja contaminada es una exposición por vía…','Parenteral',['Dérmica','Digestiva','Respiratoria'],'La vía parenteral es la entrada directa a la sangre a través de heridas, cortes o pinchazos.');
+mc('pict','¿Qué indica el pictograma de la calavera con tibias cruzadas?','Toxicidad aguda: puede causar la muerte',['Producto inflamable','Peligro para el medio ambiente','Gas a presión'],'Es el pictograma de toxicidad aguda: incluso pequeñas cantidades pueden ser muy dañinas o mortales.');
+mc('pict','Ves un rombo rojo con una llama dibujada. ¿Qué significa?','Producto inflamable',['Producto corrosivo','Riesgo biológico','Radiación'],'La llama avisa de que el producto puede arder con facilidad: manténlo lejos de chispas y fuentes de calor.');
+mc('pict','El pictograma con una silueta humana y una estrella en el pecho avisa de…','Peligro grave para la salud (por ejemplo, cancerígeno)',['Gas a presión','Comburente','Irritante para los ojos'],'Es el pictograma de peligro para la salud: sustancias cancerígenas, mutágenas, tóxicas para la reproducción o que dañan órganos.');
+mc('fds','¿Cuántos apartados tiene una ficha de datos de seguridad (FDS)?','16',['8','12','24'],'La FDS se estructura en 16 apartados, desde la identificación del producto hasta la información reglamentaria.');
+mc('fds','En la etiqueta de un producto químico, las frases H son…','Indicaciones de peligro',['Consejos de prudencia','Teléfonos de emergencia','Instrucciones de reciclaje'],'H viene de «Hazard» (peligro): describen el riesgo. Las frases P (prudencia) indican cómo actuar para evitarlo.');
+mc('fds','¿Qué documento explica los primeros auxilios, el almacenamiento y los EPI recomendados de un producto químico?','La ficha de datos de seguridad',['El albarán de entrega','La factura','El catálogo comercial'],'La FDS reúne la información de seguridad del producto y debe estar accesible para quien lo usa.');
+mc('polvo','La silicosis se produce por respirar…','Polvo de sílice cristalina',['Vapor de agua','Gas butano','Humo de vela'],'Se asocia a cortar o pulir piedra, cuarzo aglomerado o cerámica sin controlar el polvo. Es irreversible: solo sirve la prevención.');
+mc('mercurio','Los sombrereros del siglo XIX enfermaban por trabajar con…','Mercurio',['Tinta de calamar','Aceite de oliva','Cloro de piscina'],'Las sales de mercurio se usaban para tratar el fieltro. La exposición crónica daña el sistema nervioso: temblores, irritabilidad… de ahí la expresión «loco como un sombrerero».');
+mc('jer','En la jerarquía de la prevención, ¿qué medida va PRIMERO?','Eliminar el peligro en su origen',['Dar un EPI a cada persona','Poner un cartel de aviso','Formar al personal'],'Lo mejor es que el riesgo no exista. Los EPI son el último recurso, cuando no se ha podido controlar de otra forma.');
+mc('limpieza','Mezclar lejía con un producto que contiene amoniaco puede…','Liberar gases tóxicos',['Limpiar el doble de bien','Neutralizar ambos productos sin riesgo','Producir solo espuma inofensiva'],'Nunca mezcles productos de limpieza: se pueden formar gases irritantes y tóxicos que se inhalan.');
+mc('alim','La acrilamida puede formarse al…','Freír u hornear alimentos con almidón hasta dejarlos muy oscuros',['Congelar pescado','Lavar verduras','Hervir agua'],'Dorado, no negro. Es un contaminante químico de los alimentos tostados o fritos en exceso (probable cancerígeno).');
+/* --- Biológicos --- */
+mc('leg','Legionella se contrae principalmente…','Inhalando aerosoles de agua contaminada',['Bebiendo agua del grifo','Por contacto con una persona enferma','Comiendo marisco crudo'],'Duchas, spas y torres de refrigeración generan gotitas que se inhalan. No se contagia de persona a persona.');
+mc('leg','¿En qué rango de temperatura se multiplica la Legionella?','Entre 20 y 45 ºC',['Por debajo de 0 ºC','Entre 60 y 80 ºC','Solo por encima de 90 ºC'],'Su óptimo ronda los 35 ºC. Por eso el agua fría se mantiene lo más fría posible y la caliente por encima de 50 ºC en los puntos terminales.');
+mc('leg','¿Qué real decreto regula la prevención y el control de la Legionella en España?','RD 487/2022',['RD 1215/1997','RD 664/1997','RD 486/1997'],'El RD 487/2022 establece los criterios higiénico-sanitarios para prevenir y controlar la legionelosis.');
+mc('anis','¿Qué hay que hacer para eliminar el Anisakis del pescado que se come crudo?','Congelarlo a −20 ºC al menos 24 horas',['Echarle vinagre','Exprimirle limón','Salarlo un rato'],'El vinagre y el limón no lo matan. La congelación a −20 ºC (24 h como mínimo en la normativa europea) sí.');
+mc('salm','¿En qué zona de temperatura se multiplican con rapidez muchas bacterias de los alimentos?','Entre 5 y 65 ºC',['Entre −18 y 0 ºC','Por encima de 100 ºC','Por debajo de −20 ºC'],'Es la «zona de peligro». Por eso se conserva por debajo de 5 ºC y se mantiene caliente por encima de 65 ºC.');
+mc('list','¿Qué hace especial a la Listeria frente a otras bacterias?','Puede multiplicarse incluso en la nevera',['Solo vive en el agua del mar','Muere con cualquier frío','Solo afecta a las plantas'],'Crece a temperaturas de refrigeración: higiene de la cámara y fechas de caducidad son clave. Es peligrosa en embarazadas y personas con defensas bajas.');
+mc('tetan','¿Qué vacuna es clave para quien trabaja en zanjas, jardines o cultivos?','Tétanos',['Fiebre amarilla','Rabia','Ninguna es útil'],'Las esporas del tétanos viven en el suelo y entran por heridas. Mantén la vacunación al día según indique tu servicio médico.');
+mc('vac','¿Qué vacuna es especialmente importante en el personal sanitario y de limpieza hospitalaria?','Hepatitis B',['Fiebre amarilla','Cólera','Rabia'],'El virus de la hepatitis B se transmite por sangre y fluidos; existe una vacuna eficaz.');
+mc('vac','Tras usar una aguja, lo correcto es…','Desecharla sin reencapsular en un contenedor rígido',['Taparla con su capuchón','Doblarla con la mano','Dejarla en la bandeja'],'Reencapsular provoca muchos pinchazos. Contenedor rígido y desecharla justo donde se usa.');
+mc('campo','La leptospirosis se transmite por contacto con…','Agua o barro contaminados con orina de roedores',['Aire acondicionado sucio','Pescado crudo','Teclados compartidos'],'Es típica de alcantarillas, zanjas y campos. Entra por heridas o mucosas.');
+mc('virus','¿Cuál NO es un agente biológico?','Polvo de sílice',['Virus','Hongo','Bacteria'],'La sílice es un contaminante químico. Virus, bacterias, hongos y parásitos sí son agentes biológicos.');
+mc('virus','En la clasificación de agentes biológicos (RD 664/1997), ¿cuál es el grupo más peligroso?','Grupo 4',['Grupo 1','Grupo 2','Grupo 0'],'Grupo 4: enfermedad grave, alto riesgo de propagación y sin profilaxis ni tratamiento eficaz.');
+mc('cad','¿Cuántos eslabones tiene la cadena de infección que hemos estudiado?','Seis',['Tres','Cuatro','Diez'],'Agente, reservorio, puerta de salida, vía de transmisión, puerta de entrada y huésped susceptible. Rompe uno y se corta la cadena.');
+mc('campo','El «pulmón del viticultor» es una alergia pulmonar causada por…','Esporas del hongo Botrytis',['Un virus','Una picadura de insecto','Zumo de uva fermentado'],'Es una alveolitis alérgica por inhalar esporas de Botrytis cinerea, el hongo que afecta a la uva.');
+/* --- Psicosociales --- */
+mc('burn','¿Cuál es una de las dimensiones del síndrome de burnout?','Agotamiento emocional',['Exceso de vitaminas','Hiperactividad física','Sobrepeso laboral'],'El burnout combina agotamiento, distanciamiento o cinismo hacia el trabajo y sensación de ineficacia.');
+mc('burn','La OMS describe el burnout como…','Un fenómeno ocupacional por estrés laboral crónico',['Una infección','Una alergia','Un accidente de tráfico'],'En la CIE-11 aparece como fenómeno ocupacional, no como enfermedad: surge del estrés crónico en el trabajo que no se ha gestionado con éxito.');
+mc('crunch','En el sector de los videojuegos, el «crunch» consiste en…','Periodos de jornadas larguísimas antes de un lanzamiento',['Comer snacks en la oficina','Un nivel muy difícil del juego','Un tipo de contrato indefinido'],'Semanas o meses de horas extra intensivas. Es un riesgo psicosocial: fatiga, estrés y más errores.');
+mc('tecno','El tecnoestrés aparece por…','Uso intensivo y sin límites de las tecnologías y la hiperconexión',['Tener un ordenador nuevo','Usar poco el móvil','Un teclado muy duro'],'Notificaciones, correos fuera de hora y presión de respuesta inmediata generan una tensión continua.');
+mc('tecno','El derecho a la desconexión digital se recoge en…','Ley Orgánica 3/2018 (art. 88)',['RD 487/2022','Reglamento (CE) 853/2004','RD 664/1997'],'La LO 3/2018, de protección de datos y garantía de los derechos digitales, reconoce la desconexión digital en el ámbito laboral.');
+mc('mobb','¿Qué caracteriza al acoso laboral (mobbing)?','Hostigamiento repetido y prolongado contra una persona',['Una discusión puntual','Una crítica constructiva','Un cambio de turno pactado'],'No es un enfado aislado: es una conducta hostil sistemática y mantenida en el tiempo.');
+mc('ley','Según la Ley 31/1995, ¿quién debe evaluar los riesgos laborales, también los psicosociales?','La empresa',['Solo el trabajador afectado','Solo los sindicatos','Nadie: es voluntario'],'La empresa tiene el deber de proteger a su plantilla y de evaluar todos los riesgos, incluidos los psicosociales.');
+mc('burn','¿Cuál es una medida organizativa frente al estrés laboral?','Clarificar funciones y repartir bien las cargas de trabajo',['Subir la música de la oficina','Ignorar las quejas','Aumentar las horas extra'],'Actuar sobre la organización (cargas, horarios, funciones, autonomía) ataca la causa, no solo el síntoma.');
+/* --- Verdadero / Falso (25) --- */
+tf('anis','El vinagre mata el Anisakis de los boquerones.',false,'Falso: el vinagre no lo elimina. Hay que congelar el pescado a −20 ºC durante al menos 24 horas.');
+tf('pict','Un producto con el pictograma de la llama puede incendiarse con facilidad.',true,'Verdadero: la llama indica producto inflamable. Aléjalo de chispas, llamas y calor.');
+tf('fds','La ficha de datos de seguridad solo hace falta en los laboratorios.',false,'Falso: cualquier trabajo con productos químicos peligrosos debe tener la FDS accesible, sea cocina, taller o limpieza.');
+tf('polvo','La silicosis se cura con un tratamiento de unas semanas.',false,'Falso: es una enfermedad pulmonar irreversible. La clave es evitar respirar el polvo de sílice.');
+tf('limpieza','Mezclar lejía con otros limpiadores es seguro si abres la ventana.',false,'Falso: ventilar ayuda, pero la reacción genera gases tóxicos igualmente. No se mezclan productos de limpieza.');
+tf('quim','La vía dérmica significa que el contaminante entra a través de la piel.',true,'Verdadero: muchos disolventes y productos de limpieza atraviesan la piel o la dañan. Por eso se usan guantes adecuados.');
+tf('quim','Si un producto huele bien, no puede ser peligroso.',false,'Falso: el olor no indica toxicidad. Hay productos peligrosos sin olor y otros agradables que irritan o intoxican.');
+tf('epi','Una mascarilla de tela protege igual que un filtro químico frente a vapores.',false,'Falso: frente a vapores y gases se necesita el filtro adecuado al contaminante, que indica la FDS.');
+tf('jer','Los EPI son la primera medida de prevención.',false,'Falso: son el último recurso. Primero se elimina o sustituye el peligro y se actúa sobre el entorno.');
+tf('fds','La etiqueta de un producto peligroso incluye pictogramas, palabra de advertencia y frases H y P.',true,'Verdadero: la etiqueta es la primera fuente de información; la FDS la completa con más detalle.');
+tf('leg','La Legionella se contagia de persona a persona.',false,'Falso: se adquiere al inhalar aerosoles de agua contaminada, no por contacto con otra persona.');
+tf('leg','El agua caliente en los puntos terminales debe superar los 50 ºC como criterio de control de Legionella.',true,'Verdadero: según el RD 487/2022 la temperatura en puntos terminales debe mantenerse por encima de 50 ºC (y 60 ºC en el acumulador).');
+tf('salm','La Salmonella puede estar en una mayonesa casera hecha con huevo crudo.',true,'Verdadero: huevos, mayonesas y tortillas poco cuajadas son clásicos. Usa ovoproductos pasteurizados y frío por debajo de 5 ºC.');
+tf('virus','Que haya gérmenes en un teclado significa siempre que hay un peligro grave para la salud.',false,'Falso: que haya microorganismos no equivale a peligro, pero justifica limpiar con regularidad y lavarse las manos.');
+tf('tetan','El tétanos se contrae por esporas del suelo que entran por heridas.',true,'Verdadero: un corte sucio en la huerta, la obra o el jardín es una puerta de entrada. Desinfecta y revisa tu vacunación.');
+tf('campo','La leptospirosis puede contraerse trabajando en zanjas y alcantarillas.',true,'Verdadero: la orina de roedores contamina el agua y el barro, y entra por heridas o mucosas.');
+tf('list','La Listeria no se multiplica dentro de la nevera.',false,'Falso: es de las pocas bacterias que crecen a temperaturas de refrigeración. Cuida la higiene de la cámara y las caducidades.');
+tf('vac','En el ámbito sanitario no existe ninguna vacuna recomendada para el personal.',false,'Falso: la vacuna de la hepatitis B es una medida clave para quien puede estar en contacto con sangre o fluidos.');
+tf('cad','Si rompes un eslabón de la cadena de infección, se corta la transmisión.',true,'Verdadero: no hace falta actuar sobre todos los eslabones; basta con cortar uno con eficacia.');
+tf('campo','Los hongos pueden ser agentes biológicos de riesgo laboral.',true,'Verdadero: por ejemplo, las esporas de Botrytis en la vendimia (pulmón del viticultor) o los hongos del polvo del grano.');
+tf('mobb','Un conflicto puntual entre dos compañeros es automáticamente mobbing.',false,'Falso: el acoso exige una conducta hostil repetida y sostenida en el tiempo. Un conflicto puntual hay que gestionarlo, pero no es acoso por sí solo.');
+tf('burn','El burnout aparece por un estrés laboral crónico que no se gestiona.',true,'Verdadero: se instala poco a poco y combina agotamiento, cinismo e ineficacia. Se previene actuando sobre la organización del trabajo.');
+tf('crunch','Encadenar meses de horas extra seguidas puede ser un riesgo psicosocial.',true,'Verdadero: la sobrecarga mantenida deteriora el descanso, la salud y el rendimiento. El crunch es el ejemplo clásico en videojuegos.');
+tf('tecno','Tienes derecho a la desconexión digital fuera de tu horario de trabajo.',true,'Verdadero: la LO 3/2018 reconoce este derecho para proteger el descanso y la conciliación.');
+tf('ley','Los riesgos psicosociales no son riesgos laborales porque no se ven.',false,'Falso: son riesgos laborales como cualquier otro y la empresa debe evaluarlos y prevenirlos.');
+/* --- Ordenar secuencias (15) --- */
+or('jer','Ordena la jerarquía de la prevención, de la mejor medida a la última opción.',['Eliminar el peligro','Sustituirlo por algo menos peligroso','Protecciones colectivas (por ejemplo, extracción de aire)','Medidas organizativas (turnos, formación, señalización)','Equipos de protección individual (EPI)'],'Se empieza por la raíz del problema y se termina en la persona. El EPI protege, pero no elimina el riesgo.');
+or('cad','Ordena la cadena de infección.',['Agente','Reservorio','Puerta de salida','Vía de transmisión','Puerta de entrada','Huésped susceptible'],'Siempre en este orden: del microorganismo hasta la persona que puede enfermar.');
+or('vac','Te has pinchado con una aguja usada. ¿Qué haces, en orden?',['Deja sangrar la herida','Lávala con agua y jabón','Desinféctala','Comunica el accidente y acude a salud laboral'],'Actúa rápido y sin pánico: no presiones ni chupes la herida, y avisa para que valoren vacunación y seguimiento.');
+or('fds','Vas a usar un producto químico nuevo. ¿Cuál es el orden más seguro?',['Leer la etiqueta y los pictogramas','Consultar la ficha de datos de seguridad','Ponerte los EPI indicados','Manipular el producto','Guardarlo bien cerrado y etiquetado'],'Primero te informas, después te proteges y solo entonces manipulas.');
+or('burn','Ordena las fases del estrés según el modelo de Selye.',['Alarma','Resistencia','Agotamiento'],'El cuerpo reacciona, aguanta mientras puede y, si el estrés se mantiene, se agota.');
+or('ley','Ordena el proceso de gestión de un riesgo psicosocial.',['Identificar los factores de riesgo','Evaluarlos','Planificar medidas preventivas','Aplicar las medidas','Revisar si funcionan'],'Es el ciclo de mejora continua de la prevención.');
+or('salm','Ordena cómo preparar una tortilla de forma segura.',['Lavarte las manos','Usar huevo pasteurizado','Cocinarla bien cuajada','Servirla o enfriarla rápido','Guardarla por debajo de 5 ºC'],'Higiene, materia prima segura, cocinado y cadena de frío.');
+or('anis','Ordena el tratamiento seguro de un pescado que se va a comer crudo.',['Limpiar y eviscerar pronto','Congelar a −20 ºC al menos 24 h','Descongelar en la nevera','Preparar y servir'],'La congelación previa es lo que elimina el parásito.');
+or('leg','Ordena de menor a mayor temperatura.',['Agua fría (menos de 20 ºC)','Zona de riesgo (20–45 ºC)','Agua caliente en grifo (más de 50 ºC)','Acumulador de agua caliente (60 ºC)'],'La Legionella prospera en el tramo intermedio. Por eso frío bien frío y caliente bien caliente.');
+or('mobb','Ante una situación de acoso en el trabajo, ¿qué orden es el más razonable?',['Anotar fechas y hechos','Hablar con el delegado de prevención o con la empresa','Pedir que se active el protocolo o la investigación','Seguimiento y medidas de apoyo'],'Documentar ayuda a que la empresa pueda actuar. Si dudas, busca apoyo en representantes, servicio de prevención o inspección.');
+or('polvo','Ordena el recorrido del polvo inhalado dentro del cuerpo.',['Aire con polvo','Nariz y boca','Tráquea y bronquios','Alvéolos pulmonares','Sangre'],'Las partículas más finas llegan hasta los alvéolos, donde pueden dañar el tejido o pasar a la sangre.');
+or('leg','Ordena cómo se produce un caso de legionelosis en un hotel.',['El agua tibia permanece estancada','La bacteria se multiplica','La ducha genera aerosol','Se inhalan las gotitas','Aparece una neumonía'],'Cortando cualquier eslabón (temperatura, mantenimiento, limpieza de difusores) se evita el caso.');
+or('tetan','Te cortas con una herramienta sucia en una zanja. ¿Qué haces?',['Aparta y deja de trabajar','Lava con agua y jabón','Desinfecta y cubre','Revisa tu vacuna del tétanos y consulta si hace falta'],'Cualquier herida con tierra puede ser puerta de entrada de bacterias.');
+or('virus','Ordena los grupos de agentes biológicos, de menos a más peligroso.',['Grupo 1: improbable que cause enfermedad','Grupo 2: puede causar enfermedad, poco probable que se propague','Grupo 3: enfermedad grave, riesgo de propagación, hay tratamiento','Grupo 4: enfermedad grave, alto riesgo y sin tratamiento eficaz'],'El RD 664/1997 clasifica los agentes en cuatro grupos según su riesgo de infección.');
+or('burn','Ordena los niveles de prevención psicosocial.',['Primaria: actuar sobre la causa (organización del trabajo)','Secundaria: enseñar a gestionar el estrés','Terciaria: atender y rehabilitar a quien ya está afectado'],'Lo ideal es prevenir en origen y no llegar a la tercera fase.');
+Q.forEach((q,i)=>q.id=i);
+
+/* ================= FRASES ================= */
+const WRONG=["¡Auch! Eso ha dolido más que un lunes a las 7:00.","Has pisado una mina… de conocimiento.","La tormenta te ha dado un achuchón.","Ni el casco te ha salvado de esa respuesta.","Tu delegado de prevención acaba de llorar en silencio.","Eso estaba en el temario, pero en la página que no leíste.","Plot twist: no era esa.","Tu salud ha bajado, tu orgullo todavía no. Aún.","¡Crujido! Eso ha sido el casco… o tu media.","Has caído en la trampa más vieja del libro de PRL.","Error detectado. Reiniciando neuronas en 3, 2, 1…","Esa respuesta tiene más fallos que un andamio sin barandilla.","Tranquilo: hasta los técnicos de prevención se equivocan. Pero menos.","Estás más tocado que un EPI caducado.","¡Boom! Una vida menos, un aprendizaje más.","La respuesta correcta te mira desde lejos, ofendida.","Mala suerte: el suelo estaba mojado y no había cartel.","Has perdido una vida. Aún te quedan… las que te quedan.","¡Casi! (No, no casi. Pero queda bonito.)","Se ha activado el protocolo «¿por qué hice clic ahí?»."];
+const TIMEOUT=["¡Tiempo! La tormenta no espera a nadie.","Te has quedado pensando… y el reloj no perdona.","Se acabó el tiempo: la pregunta se ha ido sin despedirse.","Demasiado lento: hasta Legionella se multiplica más rápido.","Tiempo agotado. ¿Buscabas la respuesta en el cuaderno?","El reloj ha ganado esta ronda."];
+const RIGHT=["¡Directo al botiquín de los genios!","¡Eso es! Tu casco brilla más.","Acierto limpio, sin derrames.","Respuesta de delegado de prevención de oro.","¡Bien jugado! La tormenta se enfría.","Crack. Maestro. Fiera. Todo junto.","Ni el inspector de trabajo lo habría hecho mejor.","¡Pum! Acierto con certificado de calidad.","Tu cerebro lleva EPI de serie.","¡Sí señor! Así se sobrevive en la isla.","Esa neurona ha hecho horas extra bien pagadas.","Correcto, y sin necesidad de mascarilla.","Estás en racha. ¡Que no se enfríe!","Aprobado con casco y chaleco."];
+const HEROSAY={4:["Estoy bien… solo es un rasguño.","Ejem. Ya me he manchado el chaleco."],3:["Vale, esto empieza a doler.","Tengo una tirita y poca fe."],2:["¿Alguien tiene un botiquín?","Veo estrellitas. Y hasta humo."],1:["Mi casco… ¿dónde está mi casco?","Última vida. ¡Dime que sabes esta!"],5:["¡Listo para sobrevivir!","Casco puesto, cerebro en marcha."]};
+const GAMEOVER=["Has sido eliminado. Respira hondo y pide la revancha.","GAME OVER: tu casco vuela a otra isla.","Eliminado. Tranquilo, nadie lo ha grabado… (mentira).","Has caído como la bolsa en un mal día.","Fin de la partida. Se abre un expediente informativo.","Tu personaje ha sido evacuado en camilla con estilo.","Ha sido un placer. Hasta el próximo intento.","Tu avatar pide una baja médica de tres partidas.","Se te ha acabado la vida laboral (del juego).","Tropiezo épico: ya puedes anotarlo en el parte de accidentes.","La isla te echará de menos durante cuatro segundos.","Eliminado con deportividad. Eso suma… nada, pero queda bien.","¡Pausa para el café! Después, venganza.","Has quedado fuera: necesitas más formación (de la buena).","Nueva lección desbloqueada: «así no».","Tu casco te manda saludos desde el suelo."];
+const VICTORY=["¡Has sobrevivido a la isla de la prevención!","¡Victoria magistral! Tu casco merece una vitrina.","Delegado de prevención en prácticas: nivel desbloqueado.","Has ganado sin que te pillara la tormenta. ¡Brutal!","Los riesgos te temen. Los EPI te adoran.","Eres la razón por la que el inspector sonríe.","¡Último en pie y primero en seguridad!","Tu currículum acaba de añadir: «Experto en no morir».","Superviviente certificado. (El diploma es imaginario.)","Hasta Legionella ha pedido tu autógrafo.","Así se hace: con cabeza, casco y buenas respuestas.","¡Épico! El botiquín ni se ha enterado.","La empresa te ofrece un contrato fijo… en la imaginación.","¡Ganaste! Ahora hazlo en la vida real: lee la etiqueta."];
+const TIERS={
+1:["Has llegado arrastrándote, pero has llegado.","Una estrella: ¡la dignidad intacta (más o menos)!","Aprobado raspando el casco.","Superviviente por los pelos: repasa las diapositivas."],
+2:["Dos estrellas: sobrevives, pero con cojera.","Pasable. El botiquín te debe un café.","Te ha faltado un pelín de calma o de velocidad.","Vas bien, pero la tormenta te ha mordido."],
+3:["Tres estrellas: sólido como una barandilla.","Buen trabajo. Se nota que has leído la etiqueta.","Un 3 con cara de casi 4. Apunta alto.","Te falta poco para ser leyenda de la isla."],
+4:["Cuatro estrellas: nivel delegado de prevención.","Casi perfecto. Ni el EPI se atreve a protestar.","Rápido, limpio y con estilo. ¡Muy bien!","Casi inmortal. Casi."],
+5:["¡CINCO ESTRELLAS! Leyenda absoluta de la isla.","Perfecto: la tormenta pidió un aplazamiento.","Salud intacta y cerebro a mil: eres el sueño de cualquier mutua.","Sin un rasguño y a toda velocidad. ¡Maestro de la prevención!"]};
+const DEATH={
+quim:{e:'☠️🧪',t:['Has sido eliminado por una mezcla «casera» de dos productos. La química no perdona al creativo.','Eliminado por un vapor misterioso. Nadie leyó la etiqueta. Típico.']},
+mercurio:{e:'🎩🌡️',t:['Has sido eliminado por un sombrero de fieltro tóxico. Moda mortal del siglo XIX.','Te ha atrapado el mercurio. Tus últimas palabras: «qué sombrero tan elegante».']},
+polvo:{e:'🪨😮‍💨',t:['Eliminado por una nube de polvo de sílice mientras cortabas una encimera «sin agua, que es más rápido».','Has caído por inhalar polvo. Tus pulmones piden mascarilla y revancha.']},
+pict:{e:'⚠️🔥',t:['Eliminado por ignorar un pictograma. Era un rombo rojo, no un adorno.','Te ha pillado un rombo de peligro. Se veía a diez metros.']},
+epi:{e:'😷🤡',t:['Eliminado por llevar el EPI… en el bolsillo.','Te has protegido con una mascarilla de tela contra vapores químicos. Valiente, pero no.']},
+fds:{e:'📄🔍',t:['Has sido aplastado por una ficha de datos de seguridad de 16 apartados… sin leer.','Eliminado por no consultar la FDS. Ella te esperaba en el cajón.']},
+limpieza:{e:'🧴💨',t:['Has caído por mezclar lejía con otro limpiador «para que limpie el doble». Limpió. Y de qué forma.','Eliminado por un spray multiusos sin ventilar. Olía a pino… y a problemas.']},
+alim:{e:'🍟⚫',t:['Eliminado por una patata frita tan quemada que ya era carbón.','Has caído por no respetar el «dorado, no negro». Tostada nivel eclipse.']},
+leg:{e:'🚿🦠',t:['Has sido eliminado por la ducha de un hotel a 35 ºC. Y solo querías relajarte.','Legionella te ha pillado por inhalar el aerosol de una torre de refrigeración sin mantenimiento.']},
+anis:{e:'🐟🪱',t:['Eliminado por un boquerón en vinagre sin congelar. El gusano ni se inmutó.','Anisakis te ha eliminado. El vinagre le sirvió de aliño.']},
+list:{e:'🥪🧊',t:['Eliminado por un embutido que vivía feliz en una nevera sucia. Listeria sí soporta el frío.','Has caído por un queso fresco caducado. Su fecha te estaba esperando.']},
+salm:{e:'🥚☀️',t:['Mayonesa casera al sol de agosto. Eliminado en 3… 2… 1…','Una tortilla poco cuajada te ha derribado. Ella se mantuvo firme; tú, no.']},
+tetan:{e:'🥾🔩',t:['Eliminado por un clavo oxidado y una vacuna atrasada. Combo clásico.','Esporas del suelo + corte en la mano + sin vacuna = tú, aquí.']},
+vac:{e:'💉🙈',t:['Eliminado por reencapsular una aguja. La tapa no era para eso.','Te ha derribado una aguja olvidada en la bandeja. Un pinchacito y… game over.']},
+virus:{e:'🦠👑',t:['Has sido eliminado por un microorganismo de 0,0001 mm. Humillante.','Un agente biológico de grupo 4 te ha derribado. Nunca te vio, pero ya te quería.']},
+campo:{e:'🐀🍇',t:['Eliminado por una rata de zanja y su amigo el barro. Ni te los presentaron.','Has caído en el campo: botas sin guantes y heridas sin desinfectar.']},
+cad:{e:'⛓️💥',t:['Eliminado por un eslabón que no rompiste. La cadena de infección te ha ganado.','Has caído porque nadie cortó la cadena. Los seis eslabones, tan felices.']},
+burn:{e:'🪫😵',t:['Te has quedado sin batería: 1 % de energía y 99 % de reuniones.','Eliminado por burnout: tu energía se fue a dormir y no te avisó.']},
+tecno:{e:'📱🔔',t:['Eliminado por 347 notificaciones simultáneas. Tu móvil ganó.','Has caído en un grupo de WhatsApp laboral a las 3 de la mañana.']},
+mobb:{e:'💬🚪',t:['Eliminado por un ambiente hostil: la prevención también incluye el buen trato.','Has caído en el chat equivocado. Un bocadillo de texto más y no lo cuentas.']},
+crunch:{e:'⏰☕',t:['Eliminado por una semana de 90 horas «hasta el lanzamiento». Café nivel dios.','Te ha derribado el crunch: tu último commit fue a las 4:07.']},
+ley:{e:'⚖️📜',t:['Has sido eliminado por incumplir una ley que no habías leído. La LPRL te mira.','Un inspector de trabajo imaginario te ha dejado fuera. Con cariño.']},
+jer:{e:'🔺🪖',t:['Eliminado por empezar por el final: te diste el EPI y el riesgo seguía ahí.','Has caído por saltarte la jerarquía de prevención. Primero eliminar, luego el casco.']}
+};
+
+/* ================= JUEGO ================= */
+const N=25,LIM={mc:20,tf:15,or:40},TYPE={mc:'Opción múltiple',tf:'Verdadero o falso',or:'Ordena la secuencia'};
+let G=null,timerId=null;
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$('#'+id).classList.add('active');window.scrollTo(0,0);document.body.classList.toggle('danger',false)}
+function refreshLobby(){$('#best').textContent=store.get('prlr_best',0);$('#played').textContent=store.get('prlr_played',0)}
+function buildGame(){
+  const recent=new Set(store.get('prlr_recent',[]));
+  const pick=(t,n)=>shuffle(Q.filter(q=>q.t===t)).sort((a,b)=>(recent.has(a.id)?1:0)-(recent.has(b.id)?1:0)).slice(0,n);
+  const sel=shuffle([...pick('mc',12),...pick('tf',8),...pick('or',5)]);
+  store.set('prlr_recent',[...sel.map(q=>q.id),...store.get('prlr_recent',[])].slice(0,50));
+  return sel;
+}
+function start(){
+  G={qs:buildGame(),i:0,lives:5,score:0,streak:0,ok:0,times:[],lastKey:'quim',done:false};
+  store.set('prlr_played',store.get('prlr_played',0)+1);
+  show('game');renderHud();$('#say').textContent=bag('say5',HEROSAY[5]);setHeroLives($('#hero'),5);nextQ();sfx.click();
+}
+function renderHud(){
+  $('#hearts').innerHTML=[...Array(5)].map((_,i)=>`<i class="${i<G.lives?'':'lost'}">❤️</i>`).join('');
+  const hp=G.lives*20,b=$('#hpbar');$('#hpfill').style.width=hp+'%';$('#hptxt').textContent=hp+' HP';
+  b.className='hpbar '+(G.lives<=1?'low':G.lives<=3?'mid':'');
+  $('#qn').textContent=Math.min(G.i+1,N);$('#stormfill').style.width=(G.i/N*100)+'%';$('#score').textContent=G.score;
+  $('#streak').textContent=G.streak>=2?`🔥 racha x${G.streak}`:'';
+  setHeroLives($('#hero'),G.lives);document.body.classList.toggle('danger',G.lives===1);
+}
+function nextQ(){
+  const q=G.qs[G.i];G.q=q;G.locked=false;
+  $('#fb').classList.add('hidden');$('#qtype').textContent=TYPE[q.t];$('#qtext').textContent=q.q;$('#qbody').innerHTML='';
+  if(q.t==='mc'){
+    G.opts=shuffle([q.right,...q.wrongs]);
+    $('#qbody').innerHTML='<div class="opts">'+G.opts.map((o,i)=>`<button class="opt" data-i="${i}"><b>${'ABCD'[i]}</b><span>${o}</span></button>`).join('')+'</div>';
+    document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>answerMC(+b.dataset.i));
+  }else if(q.t==='tf'){
+    $('#qbody').innerHTML='<div class="opts tf"><button class="opt v" data-v="1"><b>V</b><span>Verdadero</span></button><button class="opt f" data-v="0"><b>F</b><span>Falso</span></button></div>';
+    document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>answerTF(b.dataset.v==='1'));
+  }else{setupOrder(q)}
+  G.lim=LIM[q.t];G.t0=performance.now();startTimer();
+}
+function startTimer(){
+  clearInterval(timerId);const tm=$('#timer');tm.classList.remove('warn');$('#tfill').style.width='100%';let lastSec=-1;
+  timerId=setInterval(()=>{
+    const el=(performance.now()-G.t0)/1000,left=Math.max(0,G.lim-el);
+    $('#tfill').style.width=(left/G.lim*100)+'%';tm.classList.toggle('warn',left<5);
+    const s=Math.ceil(left);if(left<5&&s!==lastSec&&left>0){sfx.tick();lastSec=s}
+    if(left<=0){clearInterval(timerId);resolve(false,true)}
+  },100);
+}
+function answerMC(i){if(G.locked)return;const ok=G.opts[i]===G.q.right;
+  document.querySelectorAll('.opt').forEach((b,j)=>{b.disabled=true;if(G.opts[j]===G.q.right)b.classList.add('right');else if(j===i)b.classList.add('wrong');else b.classList.add('dim')});
+  resolve(ok,false)}
+function answerTF(v){if(G.locked)return;const ok=v===G.q.a;
+  document.querySelectorAll('.opt').forEach(b=>{const bv=b.dataset.v==='1';b.disabled=true;if(bv===G.q.a)b.classList.add('right');else if(bv===v)b.classList.add('wrong');else b.classList.add('dim')});
+  resolve(ok,false)}
+/* ordenar */
+function setupOrder(q){
+  const n=q.items.length;let order;do{order=shuffle(q.items.map((_,i)=>i))}while(order.every((v,i)=>v===i));
+  G.order=order;G.ans=[];
+  $('#qbody').innerHTML='<p style="font-weight:800;margin-bottom:8px;color:#d7cfff">Toca los elementos en el orden correcto. Toca una casilla para quitarlo.</p><div class="slots" id="slots"></div><div class="chips" id="chips"></div><button class="btn small" id="chk" disabled><span>Comprobar</span></button>';
+  $('#chk').onclick=checkOrder;drawOrder();
+}
+function drawOrder(){
+  const q=G.q,n=q.items.length;
+  $('#slots').innerHTML=[...Array(n)].map((_,i)=>{const it=G.ans[i];return `<div class="slot ${it!==undefined?'filled':''}" data-p="${i}"><b>${i+1}</b><span>${it!==undefined?q.items[it]:''}</span></div>`}).join('');
+  $('#chips').innerHTML=G.order.map(it=>`<button class="chip" data-it="${it}" ${G.ans.includes(it)?'disabled':''}>${q.items[it]}</button>`).join('');
+  document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{if(G.locked)return;G.ans.push(+c.dataset.it);sfx.click();drawOrder()});
+  document.querySelectorAll('.slot').forEach(s=>s.onclick=()=>{if(G.locked)return;const p=+s.dataset.p;if(G.ans[p]!==undefined){G.ans.splice(p,1);drawOrder()}});
+  $('#chk').disabled=G.ans.length!==n;
+}
+function checkOrder(){if(G.locked)return;const ok=G.ans.every((v,i)=>v===i);
+  document.querySelectorAll('.slot').forEach((s,i)=>s.classList.add(G.ans[i]===i?'ok':'ko'));
+  document.querySelectorAll('.chip').forEach(c=>c.disabled=true);$('#chk').disabled=true;resolve(ok,false)}
+/* resolver */
+function resolve(ok,timeout){
+  if(G.locked)return;G.locked=true;clearInterval(timerId);
+  const q=G.q,el=Math.min((performance.now()-G.t0)/1000,G.lim);G.times.push(el);
+  const fb=$('#fb');let html='';
+  if(ok){
+    const base=q.t==='or'?150:100,speed=Math.round(50*Math.max(0,1-el/G.lim)),streak=Math.min(G.streak,5)*10,pts=base+speed+streak;
+    G.score+=pts;G.streak++;G.ok++;sfx.ok();floatTxt('+'+pts,'#5dff7a');
+    html=`<h4>✅ ${bag('right',RIGHT)}</h4><p class="pts">+${pts} puntos <span style="color:#d7cfff;font-weight:700">(base ${base} + rapidez ${speed}${streak?` + racha ${streak}`:''})</span></p><div class="exp">💡 ${q.e}</div>`;
+    fb.className='fb good';
+  }else{
+    G.lives--;G.streak=0;G.lastKey=q.k;sfx.bad();hitFx();floatTxt('−20 HP','#ff4a5e');
+    const head=timeout?bag('timeout',TIMEOUT):bag('wrong',WRONG);
+    let corr='';
+    if(q.t==='mc')corr=`<p>✔ Respuesta correcta: <b>${q.right}</b></p>`;
+    else if(q.t==='tf')corr=`<p>✔ La afirmación era <b>${q.a?'VERDADERA':'FALSA'}</b>.</p>`;
+    else corr=`<p>✔ Orden correcto:</p><ol style="margin:4px 0 0 22px;font-weight:700">${q.items.map(i=>`<li>${i}</li>`).join('')}</ol>`;
+    html=`<h4>💥 ${head}</h4>${corr}<div class="exp">📘 ${q.e}</div>`;
+    fb.className='fb bad';
+    if(timeout&&q.t==='mc')document.querySelectorAll('.opt').forEach((b,j)=>{b.disabled=true;if(G.opts[j]===q.right)b.classList.add('right');else b.classList.add('dim')});
+    if(timeout&&q.t==='tf')document.querySelectorAll('.opt').forEach(b=>{b.disabled=true;if((b.dataset.v==='1')===q.a)b.classList.add('right');else b.classList.add('dim')});
+    if(timeout&&q.t==='or')document.querySelectorAll('.chip,#chk').forEach(c=>c.disabled=true);
+    if(G.lives>0)$('#say').textContent=bag('say'+G.lives,HEROSAY[G.lives]);
+  }
+  const last=G.lives<=0,end=G.i>=N-1;
+  html+=`<div class="row"><button class="btn small" id="nextBtn"><span>${last?'Ver qué ha pasado ☠️':end?'¡Ver resultado! 🏆':'Siguiente ▶'}</span></button></div>`;
+  fb.innerHTML=html;fb.classList.remove('hidden');renderHud();
+  $('#nextBtn').onclick=advance;$('#nextBtn').focus({preventScroll:true});
+  setTimeout(()=>fb.scrollIntoView({behavior:'smooth',block:'nearest'}),60);
+}
+function advance(){
+  if(G.done)return;
+  if(G.lives<=0){G.done=true;return die()}
+  G.i++;if(G.i>=N){G.done=true;return win()}
+  renderHud();nextQ();window.scrollTo({top:0,behavior:'smooth'});
+}
+function floatTxt(t,c){const w=$('#heroWrap'),f=document.createElement('div');f.className='float';f.textContent=t;f.style.color=c;w.appendChild(f);setTimeout(()=>f.remove(),1300)}
+function hitFx(){const w=$('#heroWrap');w.classList.remove('hit');void w.offsetWidth;w.classList.add('hit');const fl=$('#flash');fl.classList.remove('on');void fl.offsetWidth;fl.classList.add('on');const a=$('#arena');a.classList.remove('shake');void a.offsetWidth;a.classList.add('shake')}
+/* fin: derrota */
+function die(){
+  sfx.over();const d=DEATH[G.lastKey]||DEATH.quim;
+  $('#killer').textContent=d.e;$('#cause').textContent=bag('death_'+G.lastKey,d.t);$('#goQuip').textContent=bag('gameover',GAMEOVER);
+  const avg=G.times.length?(G.times.reduce((a,b)=>a+b,0)/G.times.length).toFixed(1):'0';
+  $('#deathRes').innerHTML=`<div><b>${G.i+1}/${N}</b><small>Pregunta alcanzada</small></div><div><b>${G.ok}</b><small>Aciertos</small></div><div><b>${G.score}</b><small>Puntos</small></div><div><b>${avg}s</b><small>Tiempo medio</small></div>`;
+  show('death');
+}
+/* fin: victoria */
+function win(){
+  sfx.win();confetti();
+  const bonus=G.lives*150,total=G.score+bonus;
+  const avg=G.times.reduce((a,b)=>a+b,0)/G.times.length;
+  const lifeF=(G.lives-1)/4,speedF=Math.min(1,Math.max(0,(15-avg)/10)),comb=.6*lifeF+.4*speedF;
+  const stars=comb>=.85?5:comb>=.65?4:comb>=.45?3:comb>=.25?2:1;
+  if(total>store.get('prlr_best',0))store.set('prlr_best',total);
+  $('#stars').innerHTML=[...Array(5)].map((_,i)=>`<span class="${i<stars?'':'off'}" style="animation-delay:${i*.25}s">⭐</span>`).join('');
+  $('#winTier').textContent=bag('tier'+stars,TIERS[stars]);$('#winQuip').textContent=bag('victory',VICTORY);
+  $('#winRes').innerHTML=`<div><b>${total}</b><small>Puntos totales</small></div><div><b>${'❤️'.repeat(G.lives)}</b><small>Vidas (+${bonus} pts)</small></div><div><b>${G.ok}/${N}</b><small>Aciertos</small></div><div><b>${avg.toFixed(1)}s</b><small>Tiempo medio</small></div>`;
+  $('#how').textContent=`Las estrellas combinan tus vidas restantes (60 %) y tu rapidez media de respuesta (40 %). Con ${G.lives} vida${G.lives>1?'s':''} y ${avg.toFixed(1)} s de media: ${stars} estrella${stars>1?'s':''}.`;
+  show('win');
+}
+function confetti(){const c=['#ffe14a','#2de2ff','#ff4fd8','#5dff7a','#ff4a5e'];for(let i=0;i<70;i++){const e=document.createElement('div');e.className='confetti';e.style.left=Math.random()*100+'vw';e.style.background=c[i%5];e.style.animationDuration=(2.5+Math.random()*2.5)+'s';e.style.animationDelay=Math.random()*1.2+'s';document.body.appendChild(e);setTimeout(()=>e.remove(),7000)}}
+/* eventos */
+$('#startBtn').onclick=start;$('#retry1').onclick=start;$('#retry2').onclick=start;
+$('#home1').onclick=$('#home2').onclick=()=>{refreshLobby();show('lobby')};
+$('#mute').onclick=()=>{muted=!muted;store.set('prlr_mute',muted);$('#mute').textContent=muted?'🔇':'🔊'};
+$('#mute').textContent=muted?'🔇':'🔊';
+document.addEventListener('keydown',e=>{
+  if(!$('#game').classList.contains('active')||!G)return;
+  if(e.key==='Enter'||e.key===' '){const nb=$('#nextBtn');if(G.locked&&nb&&!$('#fb').classList.contains('hidden')){e.preventDefault();advance()}return}
+  if(G.locked)return;const k=e.key.toLowerCase();
+  if(G.q.t==='mc'&&'1234'.includes(k)&&k!==''){const i=+k-1;if(G.opts[i]!==undefined)answerMC(i)}
+  if(G.q.t==='tf'){if(k==='v')answerTF(true);if(k==='f')answerTF(false)}
+});
+refreshLobby();
+</script>
+</body>
+</html>
